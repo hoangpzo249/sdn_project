@@ -25,11 +25,6 @@ const questionSchema = new mongoose.Schema({
         required: true,
         enum: ['A', 'B', 'C', 'D']
     },
-    category: {
-        type: String,
-        required: true,
-        enum: ['grammar', 'vocabulary', 'reading', 'listening']
-    },
     difficulty: {
         type: String,
         required: true,
