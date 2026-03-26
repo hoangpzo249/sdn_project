@@ -27,12 +27,12 @@ const historySchema = new mongoose.Schema({
         type: [answerSchema],
         default: []
     },
-    score: {
-        type: Number,
-        min: 0,
-        max: 10,
-        default: null
-    },
+    // score: {
+    //     type: Number,
+    //     min: 0,
+    //     max: 10,
+    //     default: null
+    // },
     passed: {
         type: Boolean,
         default: null

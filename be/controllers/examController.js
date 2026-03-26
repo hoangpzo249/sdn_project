@@ -79,14 +79,13 @@ const submitExam = async (req, res) => {
             user_id: req.user.id,
             exam_id: examId,
             answers: answers || [],
-            score: score,
             passed: passed,
             completed_at: new Date()
         });
 
         res.status(201).json({
             message: 'Nộp bài thi thành công',
-            score,
+            score: score,
             passed,
             history_id: history._id
         });

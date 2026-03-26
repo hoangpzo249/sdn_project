@@ -9,12 +9,13 @@ const TakeExam = () => {
     const [exam, setExam] = useState(null);
     const [answers, setAnswers] = useState({}); // { question_id: 'A' }
     const [timeLeft, setTimeLeft] = useState(0);
+    const [isSubmitted, setIsSubmitted] = useState(false);
+    const [result, setResult] = useState(null);
 
     useEffect(() => {
         const fetchExamData = async () => {
             try {
                 const token = localStorage.getItem('token');
-                // Gọi API lấy chi tiết cấu trúc đề (dùng chung API getExamById của Admin nãy)
                 const res = await axios.get(`http://localhost:9999/api/exams/${id}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
@@ -30,6 +31,7 @@ const TakeExam = () => {
 
     // Đếm ngược thời gian
     useEffect(() => {
+        if (isSubmitted) return;
         if (timeLeft <= 0 && exam) {
             handleSubmit(); // Hết giờ tự nộp
             return;
@@ -40,7 +42,7 @@ const TakeExam = () => {
         }, 1000);
 
         return () => clearInterval(timer);
-    }, [timeLeft, exam]);
+    }, [timeLeft, exam, isSubmitted]);
 
     const formatTime = (seconds) => {
         const m = Math.floor(seconds / 60);
@@ -49,6 +51,7 @@ const TakeExam = () => {
     };
 
     const handleSelectAnswer = (questionId, optionId) => {
+        if (isSubmitted) return;
         setAnswers({
             ...answers,
             [questionId]: optionId,
@@ -56,7 +59,7 @@ const TakeExam = () => {
     };
 
     const handleSubmit = async () => {
-        if (timeLeft > 0 && !window.confirm('Bạn có chắc chắn muốn nộp bài sớm không?')) return;
+        if (!isSubmitted && timeLeft > 0 && !window.confirm('Bạn có chắc chắn muốn nộp bài sớm không?')) return;
 
         try {
             const token = localStorage.getItem('token');
@@ -71,11 +74,8 @@ const TakeExam = () => {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
-            alert(`Nộp bài thành công!
-Điểm của bạn: ${res.data.score}/${exam.total_score}
-Kết quả: ${res.data.passed ? 'ĐẠT ✅' : 'CHƯA ĐẠT ❌'}`);
-
-            navigate('/');
+            setIsSubmitted(true);
+            setResult(res.data);
         } catch (error) {
             console.error(error);
             alert('Có lỗi xảy ra khi nộp bài');
@@ -85,6 +85,7 @@ Kết quả: ${res.data.passed ? 'ĐẠT ✅' : 'CHƯA ĐẠT ❌'}`);
     if (!exam) return <div className="text-center mt-5">Đang làm bài, vui lòng chờ...</div>;
 
     return (
+
         <div className="container mt-4 mb-5">
             <div className="row">
                 <div className="col-md-9 border-end">
@@ -108,8 +109,9 @@ Kết quả: ${res.data.passed ? 'ĐẠT ✅' : 'CHƯA ĐẠT ❌'}`);
                                                 id={`q${q._id}-opt${opt.id}`}
                                                 checked={answers[q._id] === opt.id}
                                                 onChange={() => handleSelectAnswer(q._id, opt.id)}
+                                                disabled={isSubmitted}
                                             />
-                                            <label className="form-check-label ms-2" htmlFor={`q${q._id}-opt${opt.id}`} style={{ cursor: 'pointer' }}>
+                                            <label className="form-check-label ms-2" htmlFor={`q${q._id}-opt${opt.id}`} style={{ cursor: isSubmitted ? 'default' : 'pointer' }}>
                                                 <strong>{opt.id}.</strong> {opt.text}
                                             </label>
                                         </div>
@@ -118,6 +120,43 @@ Kết quả: ${res.data.passed ? 'ĐẠT ✅' : 'CHƯA ĐẠT ❌'}`);
                             </div>
                         </div>
                     ))}
+
+                    {isSubmitted && (
+                        <div className="">
+                            <div className="">
+                                <h4 className=""> Kết Quả</h4>
+                                <div className="">
+                                    <table className="table ">
+                                        <thead className="">
+                                            <tr>
+                                                <th scope="col">Câu hỏi</th>
+                                                <th scope="col">Đáp án của bạn</th>
+                                                <th scope="col">Đáp án đúng</th>
+                                                <th scope="col">Kết quả</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {exam.questions.map((q, qIndex) => {
+                                                const isCorrect = answers[q._id] === q.correct_answer;
+                                                return (
+                                                    <tr key={q._id}>
+                                                        <td className="fw-bold">Câu {qIndex + 1}</td>
+                                                        <td>{answers[q._id] || "Không trả lời"}</td>
+                                                        <td className="fw-bold">{q.correct_answer}</td>
+                                                        <td>{isCorrect ? 'Đúng' : 'Sai'}</td>
+                                                    </tr>
+                                                );
+                                            })}
+
+                                        </tbody>
+                                    </table>
+                                    <div className={` ${result?.score < 5 ? 'text-danger' : 'text-primary'}`}>
+                                        Điểm của bạn: {result?.score} / {exam.total_score}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Thanh Timer và Submmit bên phải */}
@@ -135,13 +174,24 @@ Kết quả: ${res.data.passed ? 'ĐẠT ✅' : 'CHƯA ĐẠT ❌'}`);
                                 <div className="text-start small text-muted mb-3 fw-bold">
                                     Tiến độ: {Object.keys(answers).length} / {exam.questions.length} câu
                                 </div>
-                                <button className="btn btn-success btn-lg w-100 shadow fw-bold" onClick={handleSubmit}>
-                                    NỘP BÀI
-                                </button>
+                                {!isSubmitted ? (
+                                    <button className="btn btn-success btn-lg w-100 shadow fw-bold" onClick={handleSubmit}>
+                                        NỘP BÀI
+                                    </button>
+                                ) : (
+                                    <div className="mt-3">
+                                        <div className="mt-4">
+                                            <button onClick={() => navigate('/')} className="btn btn-secondary">Quay lại Trang Chủ</button>
+                                        </div>
+                                    </div>
+
+                                )}
                             </div>
                         </div>
                     </div>
                 </div>
+
+
             </div>
         </div>
     );

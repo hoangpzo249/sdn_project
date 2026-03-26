@@ -9,6 +9,7 @@ import ExamDetailAdmin from './pages/ExamDetailAdmin';
 import ExamList from './pages/ExamList';
 import TakeExam from './pages/TakeExam';
 import UserHistory from './pages/UserHistory';
+import HistoryManagement from './pages/HistoryManagement';
 
 function App() {
 
@@ -23,6 +24,7 @@ function App() {
           <Route path="/exams/:id/take" element={<TakeExam />} />
           <Route path="/history" element={<UserHistory />} />
           <Route path="/admin/exams" element={<ExamManagement />} />
+          <Route path="/admin/histories" element={<HistoryManagement />} />
           <Route path="/admin/exams/:id" element={<ExamDetailAdmin />} />
         </Routes>
       </Router>

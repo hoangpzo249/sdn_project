@@ -26,6 +26,7 @@ const Home = () => {
                             {user.role === 'admin' ? (
                                 <>
                                     <button onClick={() => navigate('/admin/exams')} className="btn btn-dark me-3">Quản lý Đề Thi</button>
+                                    <button onClick={() => navigate('/admin/histories')} className="btn btn-dark me-3">Quản lý Lịch Sử Thi</button>
                                 </>
                             ) : (
                                 <>

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
-const UserHistory = () => {
+const HistoryManagement = () => {
     const [histories, setHistories] = useState([]);
     const navigate = useNavigate();
     const token = localStorage.getItem('token');
@@ -10,10 +10,10 @@ const UserHistory = () => {
     useEffect(() => {
         const fetchHistory = async () => {
             try {
-                const res = await axios.get('http://localhost:9999/api/history/myhistory', {
+                const res = await axios.get('http://localhost:9999/api/history/histories', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
-                
+
                 setHistories(res.data);
             } catch (error) {
                 console.log(error);
@@ -28,7 +28,7 @@ const UserHistory = () => {
 
     return (
         <div className="container mt-5">
-            <h2>Lịch sử thi của bạn</h2>
+            <h2>Lịch sử thi của Admin</h2>
             <button className="btn btn-secondary mb-3" onClick={() => navigate('/')}>
                 Trở lại Trang Chủ
             </button>
@@ -36,6 +36,7 @@ const UserHistory = () => {
                 <thead className="table-dark">
                     <tr>
                         <th>Tên Đề Thi</th>
+                        <th>Người thi</th>
                         <th>Điểm Số</th>
                         <th>Thời Gian Thi</th>
                         <th>Thời Gian Nộp Bài</th>
@@ -45,6 +46,7 @@ const UserHistory = () => {
                     {histories.map((h) => (
                         <tr key={h._id}>
                             <td>{h.exam_id?.title || 'Đề thi đã bị xóa'}</td>
+                            <td>{h.user_id.name || 'Người dùng không tên'}</td>
                             <td>{h.score}</td>
                             <td>{new Date(h.started_at).toLocaleString()}</td>
                             <td>{h.completed_at ? new Date(h.completed_at).toLocaleString() : new Date(h.updatedAt).toLocaleString()}</td>
@@ -61,4 +63,4 @@ const UserHistory = () => {
     );
 };
 
-export default UserHistory;
+export default HistoryManagement;
